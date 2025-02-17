@@ -8,6 +8,8 @@ An easy, simple, and uncomplicated library to handle data with IndexedDB, the Ja
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
+  - [NPM](#npm)
+  - [Direct Download](#direct-download)
 - [Usage](#usage)
   - [Basic Usage](#basic-usage)
   - [Database Operations](#database-operations)
@@ -35,11 +37,86 @@ EasyIndexedDB is a modern JavaScript library that simplifies working with Indexe
 - Timezone-aware date tracking
 - Automatic version management
 - Type checking for parameters
+- No dependencies
 
 ## Installation
 
+### NPM
 ```bash
 npm install @eduardobuzzi/easyindexeddb
+```
+
+### Direct Download
+
+You can download the library directly and include it in your HTML file:
+
+1. Download the `EasyIndexedDB.js` file from this repository
+2. Include it in your HTML using a script tag:
+
+```html
+<!-- Using local file -->
+<script src="path/to/EasyIndexedDB.js"></script>
+
+<!-- Using ES modules -->
+<script type="module">
+    import EasyIndexedDB from "./path/to/EasyIndexedDB.js";
+    // Your code here
+</script>
+```
+
+#### Example with direct HTML include:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EasyIndexedDB Example</title>
+</head>
+<body>
+    <script src="path/to/EasyIndexedDB.js"></script>
+    <script>
+        const db = new EasyIndexedDB();
+        
+        async function initDB() {
+            try {
+                await db.initialize("myDatabase");
+                console.log("Database initialized!");
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        initDB();
+    </script>
+</body>
+</html>
+```
+
+#### Example with ES modules:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EasyIndexedDB Example</title>
+</head>
+<body>
+    <script type="module">
+        import EasyIndexedDB from "./EasyIndexedDB.js";
+        
+        const db = new EasyIndexedDB();
+        
+        async function initDB() {
+            try {
+                await db.initialize("myDatabase");
+                console.log("Database initialized!");
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        initDB();
+    </script>
+</body>
+</html>
 ```
 
 ## Usage
