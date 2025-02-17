@@ -320,7 +320,7 @@ try {
 ```
 
 Common error cases:
-- Browser doesn"t support IndexedDB
+- Browser doesn't support IndexedDB
 - Invalid parameter types
 - Missing required parameters
 - Non-existent database or object store
