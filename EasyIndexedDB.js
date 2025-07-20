@@ -320,12 +320,20 @@ export default class EasyIndexedDB
             {
                 const store = transaction.objectStore(objectStoreName);
 
-                arrayObjIndexesToAdd.forEach(idx => !store.indexNames.contains(idx.name) && store.createIndex(idx.name, idx.name, { unique: !!idx.unique }));
-                arrayIndexesToRemove.forEach(name => store.indexNames.contains(name) && store.deleteIndex(name));
+                arrayObjIndexesToAdd.forEach(idx =>
+                {
+                    if (!store.indexNames.contains(idx.name)) { store.createIndex(idx.name, idx.name, { unique: !!idx.unique }); }
+                });
+                
+                arrayIndexesToRemove.forEach(name =>
+                {
+                    if (store.indexNames.contains(name)) { store.deleteIndex(name); }
+                });
+                
                 arrayObjChangeIndexesName.forEach(change =>
                 {
-                    if (store.indexNames.contains(change.oldName)) store.deleteIndex(change.oldName);
-                    if (!store.indexNames.contains(change.newName)) store.createIndex(change.newName, change.newName, { unique: !!change.unique });
+                    if (store.indexNames.contains(change.oldName)) { store.deleteIndex(change.oldName); }
+                    if (!store.indexNames.contains(change.newName)) { store.createIndex(change.newName, change.newName, { unique: !!change.unique }); }
                 });
 
                 if (needsDataMigration && allData.length > 0)
@@ -482,7 +490,8 @@ export default class EasyIndexedDB
             new Intl.DateTimeFormat(undefined, { timeZone: timezone });
             this.#timezoneLastModifyDate = timezone;
             return true;
-        } catch (error) { return false; }
+        }
+        catch (error) { return false; }
     }
 
     /**
@@ -556,8 +565,7 @@ export default class EasyIndexedDB
             
             const data = { timestamp: this.#getActualDate() };
             store.put(data, "_last_modified_key_");
-        } catch (error) {
-            console.error("Could not update the database modification date.", error);
         }
+        catch (error) { console.error("Could not update the database modification date.", error); }
     }
 }
