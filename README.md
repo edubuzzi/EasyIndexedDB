@@ -1,6 +1,6 @@
 # EasyIndexedDB
 
-An easy, simple, and uncomplicated library to handle data with IndexedDB, the JavaScript NoSQL database.
+A modern, robust, and promise-based wrapper for IndexedDB, designed to provide a safe and intuitive developer experience.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -24,20 +24,18 @@ An easy, simple, and uncomplicated library to handle data with IndexedDB, the Ja
 
 ## Overview
 
-EasyIndexedDB is a modern JavaScript library that simplifies working with IndexedDB, providing an intuitive API for database operations. It handles complex IndexedDB operations while maintaining a clean and straightforward interface for developers.
+EasyIndexedDB is a modern JavaScript library that abstracts away the complexities and pitfalls of raw IndexedDB. It provides a clean, promise-based API that makes database operations intuitive, safe, and efficient. This library is designed for developers who want the power of IndexedDB without the verbose and error-prone boilerplate.
 
 ## Features
 
-- Simple and intuitive API
-- Promise-based operations
-- Comprehensive error handling
-- Support for multiple object stores
-- Flexible data querying
-- Index management
-- Timezone-aware date tracking
-- Automatic version management
-- Type checking for parameters
-- No dependencies
+-   **Intuitive, Promise-Based API**: All operations are asynchronous and use modern `async/await` syntax.
+-   **Safe, Atomic Schema Migrations**: Create, delete, and update Object Stores and indexes in a single, safe transaction.
+-   **Robust Error Handling**: Provides clear error messages and handles common issues like connection blocking.
+-   **Automatic Version Management**: The library handles database versioning automatically when the schema changes.
+-   **Efficient Data Operations**: Methods for inserting, selecting, updating, and deleting data, including bulk operations.
+-   **Timezone-Aware Date Tracking**: Automatically tracks the last modification date of the database schema.
+-   **Modern JavaScript**: Built with ES Modules, private class fields, and modern syntax.
+-   **Zero Dependencies**: A lightweight, standalone library.
 
 ## Installation
 
@@ -48,50 +46,11 @@ npm install @eduardobuzzi/easyindexeddb
 
 ### Direct Download
 
-You can download the library directly and include it in your HTML file:
+You can download the `EasyIndexedDB.js` file and include it directly in your project.
 
-1. Download the `EasyIndexedDB.js` file from this repository
-2. Include it in your HTML using a script tag:
+1.  Download the `EasyIndexedDB.js` file from this repository.
+2.  Include it in your HTML using a script tag with `type="module"`.
 
-```html
-<!-- Using local file -->
-<script src="path/to/EasyIndexedDB.js"></script>
-
-<!-- Using ES modules -->
-<script type="module">
-    import EasyIndexedDB from "./path/to/EasyIndexedDB.js";
-    // Your code here
-</script>
-```
-
-#### Example with direct HTML include:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>EasyIndexedDB Example</title>
-</head>
-<body>
-    <script src="path/to/EasyIndexedDB.js"></script>
-    <script>
-        const db = new EasyIndexedDB();
-        
-        async function initDB() {
-            try {
-                await db.initialize("myDatabase");
-                console.log("Database initialized!");
-            } catch (error) {
-                console.error("Error:", error);
-            }
-        }
-
-        initDB();
-    </script>
-</body>
-</html>
-```
-
-#### Example with ES modules:
 ```html
 <!DOCTYPE html>
 <html>
@@ -100,20 +59,20 @@ You can download the library directly and include it in your HTML file:
 </head>
 <body>
     <script type="module">
-        import EasyIndexedDB from "./EasyIndexedDB.js";
+        import EasyIndexedDB from "./path/to/EasyIndexedDB.js";
         
         const db = new EasyIndexedDB();
         
-        async function initDB() {
+        async function run() {
             try {
-                await db.initialize("myDatabase");
-                console.log("Database initialized!");
+                await db.initialize("my-app-database");
+                console.log("Database initialized successfully!");
             } catch (error) {
-                console.error("Error:", error);
+                console.error("Initialization failed:", error);
             }
         }
 
-        initDB();
+        run();
     </script>
 </body>
 </html>
@@ -128,39 +87,42 @@ import EasyIndexedDB from "@eduardobuzzi/easyindexeddb";
 
 const db = new EasyIndexedDB();
 
-// Initialize the database
+// 1. Initialize the database
 await db.initialize("myDatabase");
 
-// Create an object store with indexes
+// 2. Create an object store with indexes
 await db.createObjectStore("users", [
     { name: "email", unique: true },
     { name: "age", unique: false }
 ]);
 
-// Insert data
-await db.insertDataObjectStore("users", {
-    email: "john@example.com",
+// 3. Insert data
+const newKey = await db.insertDataObjectStore("users", {
+    email: "john.doe@example.com",
+    name: "John Doe",
     age: 30
 });
+
+console.log(`New user added with key: ${newKey}`);
 ```
 
 ### Database Operations
 
 #### Initialize Database
 ```javascript
-// Initialize with automatic version
+// Initialize with automatic versioning
 await db.initialize("myDatabase");
 
-// Initialize with specific version
-await db.initialize("myDatabase", 1);
+// Initialize with a specific version (triggers upgrade if needed)
+await db.initialize("myDatabase", 2);
 ```
 
 #### Delete Database
 ```javascript
-// Delete current database
+// Delete the database initialized with the instance
 await db.delete();
 
-// Delete specific database
+// Or delete a database by name
 await db.delete("otherDatabase");
 ```
 
@@ -168,30 +130,27 @@ await db.delete("otherDatabase");
 
 #### Create Object Store
 ```javascript
-// Create with indexes
-await db.createObjectStore("users", [
-    { name: "email", unique: true },
-    { name: "age", unique: false }
+await db.createObjectStore("products", [
+    { name: "sku", unique: true },
+    { name: "category", unique: false }
 ]);
+```
 
-// Create without indexes
-await db.createObjectStore("simple");
+#### Delete Object Store
+```javascript
+await db.deleteObjectStore("products");
 ```
 
 #### Update Object Store Structure
 ```javascript
-// Add new indexes
-const indexesToAdd = [
-    { name: "phone", unique: false }
-];
+// Add a new index
+const indexesToAdd = [{ name: "last_login", unique: false }];
 
-// Remove existing indexes
+// Remove an existing index
 const indexesToRemove = ["age"];
 
-// Rename indexes
-const indexesToRename = [
-    { oldName: "email", newName: "userEmail", unique: true }
-];
+// Rename an index (data is automatically migrated)
+const indexesToRename = [{ oldName: "email", newName: "userEmail", unique: true }];
 
 await db.updateStructureObjectStore(
     "users",
@@ -205,214 +164,194 @@ await db.updateStructureObjectStore(
 
 #### Insert Data
 ```javascript
-// Insert single record
-await db.insertDataObjectStore("users", {
-    email: "john@example.com",
-    age: 30
+// Insert a single record
+const key = await db.insertDataObjectStore("users", {
+    email: "jane.doe@example.com",
+    age: 28
 });
 
-// Insert multiple records
+// Insert multiple records in one transaction
 await db.insertMultipleDataObjectStore("users", [
-    { email: "john@example.com", age: 30 },
-    { email: "jane@example.com", age: 25 }
+    { email: "user1@example.com", age: 45 },
+    { email: "user2@example.com", age: 32 }
 ]);
 ```
 
 #### Select Data
 ```javascript
-// Select single record
-const user = await db.selectDataObjectStore("users", "email", "john@example.com");
+// Select a single record by its index
+const user = await db.selectDataObjectStore("users", "email", "jane.doe@example.com");
 
-// Select specific fields
+// Select only specific fields from a record
 const userAge = await db.selectDataObjectStore(
     "users",
     "email",
-    "john@example.com",
-    ["age"]
+    "jane.doe@example.com",
+    ["age"] // Returns { age: 28 }
 );
 
-// Select all records
+// Select all records from an object store
 const allUsers = await db.selectAllDataObjectStore("users");
-
-// Select multiple records
-const specificUsers = await db.selectMultipleDataObjectStore("users", [
-    { index: "email", value: "john@example.com" },
-    { index: "email", value: "jane@example.com" }
-]);
 ```
 
 #### Update Data
 ```javascript
-// Update single value
+// Update a specific field based on a query
 await db.updateDataObjectStore(
     "users",
-    "email",
-    "john@example.com",
-    "john.doe@example.com"
+    "email", // find records where 'email' is...
+    "jane.doe@example.com", // ...this value
+    "jane.d@new-domain.com" // and update the 'email' field to this new value
 );
 
-// Update multiple fields
+// Update multiple fields on a found record
 await db.updateDataObjectStore(
     "users",
-    "email",
-    "john@example.com",
-    null,
-    false,
+    "email", // find records where 'email' is...
+    "jane.d@new-domain.com", // ...this value
+    null, // We don't want to change the 'email' field itself
+    false, // Set the 4th parameter to false
     [
-        { index: "age", value: 31 },
-        { index: "phone", value: "123-456-7890" }
-    ]
+        { index: "age", value: 29 },
+        { index: "last_login", value: new Date() }
+    ] // ...and update these other fields
 );
 ```
 
 #### Delete Data
 ```javascript
-// Delete single record
-await db.deleteDataObjectStore("users", "email", "john@example.com");
+// Delete the first record matching the query
+await db.deleteDataObjectStore("users", "email", "user1@example.com");
 
-// Delete multiple records
-await db.deleteMultipleDataObjectStore("users", [
-    { index: "email", value: "john@example.com" },
-    { index: "email", value: "jane@example.com" }
-]);
+// Delete ALL records matching the query (useful for non-unique indexes)
+await db.deleteDataObjectStore("users", "age", 32, true);
 
-// Delete all records
+// Delete all records in an object store
 await db.deleteAllDataObjectStore("users");
 
-// Clean object store
+// Alias for deleteAllDataObjectStore
 await db.cleanObjectStore("users");
 ```
 
 ### Utility Methods
 
-#### Check Index Existence
-```javascript
-// Check single index
-const exists = await db.indexExistsInObjectStore("users", "email");
-
-// Check multiple indexes
-const existArray = await db.indexesExistsInObjectStore("users", ["email", "age"]);
-```
-
 #### Last Modification Date
 ```javascript
-// Get last modification date
+// Get the timestamp of the last schema change
 const lastModified = await db.getLastModifyDateDatabase();
+console.log(`Database schema last modified on: ${lastModified}`);
 
-// Set timezone for last modification date
-db.setTimezoneLastModifyDate("America/New_York");
+// Change the timezone for date tracking (default is "America/Sao_Paulo")
+db.setTimezoneLastModifyDate("UTC");
 
-// Set custom object store name for last modification date
-db.setObjectStoreNameLastModifyDate("_lastModified");
+// Change the name of the internal object store used for tracking
+db.setObjectStoreNameLastModifyDate("__myAppLastModified");
 ```
 
 ## API Reference
 
 ### Database Methods
-- `initialize(databaseName, databaseVersion?)`: Initialize database
-- `delete(databaseName?)`: Delete database
+- `initialize(databaseName, [databaseVersion])`: Initializes the database.
+- `delete([databaseName])`: Deletes a database.
 
 ### Object Store Methods
-- `createObjectStore(name, indexes?, setLastModifyDate?)`: Create object store
-- `deleteObjectStore(name)`: Delete object store
-- `updateStructureObjectStore(name, indexesToAdd?, indexesToRemove?, indexesToRename?)`: Update structure
-- `cleanObjectStore(name)`: Remove all data from object store
+- `createObjectStore(name, [indexes])`: Creates a new Object Store.
+- `deleteObjectStore(name)`: Deletes an Object Store.
+- `updateStructureObjectStore(name, [indexesToAdd], [indexesToRemove], [indexesToRename])`: Updates the schema of an Object Store.
+- `cleanObjectStore(name)`: Removes all data from an Object Store.
 
 ### Data Methods
-- `insertDataObjectStore(store, data)`: Insert single record
-- `insertMultipleDataObjectStore(store, dataArray)`: Insert multiple records
-- `selectDataObjectStore(store, index, value, fields?)`: Select single record
-- `selectMultipleDataObjectStore(store, queries)`: Select multiple records
-- `selectAllDataObjectStore(store, fields?)`: Select all records
-- `updateDataObjectStore(store, index, currentValue, newValue, changeValueFromCurrentValue?, updates?)`: Update data
-- `deleteDataObjectStore(store, index, value, deleteAllOccurrences?)`: Delete data
-- `deleteMultipleDataObjectStore(store, deletes)`: Delete multiple records
-- `deleteAllDataObjectStore(store, indexes?)`: Delete all records
+- `insertDataObjectStore(storeName, data)`: Inserts a single record. Returns the new record's key.
+- `insertMultipleDataObjectStore(storeName, dataArray)`: Inserts multiple records.
+- `selectDataObjectStore(storeName, indexName, value, [fields])`: Selects a single record.
+- `selectAllDataObjectStore(storeName, [fields])`: Selects all records.
+- `updateDataObjectStore(storeName, index, currentValue, newValue, [changeCurrent], [updates])`: Updates records matching a query.
+- `deleteDataObjectStore(storeName, indexName, value, [deleteAllOccurrences])`: Deletes records matching a query.
+- `deleteAllDataObjectStore(storeName)`: Deletes all data in an Object Store.
 
 ### Utility Methods
-- `indexExistsInObjectStore(store, index)`: Check index existence
-- `indexesExistsInObjectStore(store, indexes)`: Check multiple indexes
-- `getLastModifyDateDatabase()`: Get last modification date
-- `setTimezoneLastModifyDate(timezone)`: Set timezone
-- `setObjectStoreNameLastModifyDate(name)`: Set last modification store name
+- `getLastModifyDateDatabase()`: Gets the timestamp of the last schema modification.
+- `setTimezoneLastModifyDate(timezone)`: Sets the timezone for date tracking.
+- `setObjectStoreNameLastModifyDate(name)`: Sets the name of the internal tracking store.
 
 ## Examples
 
-### Complete User Management Example
+### Complete User Management Flow
 ```javascript
-import EasyIndexedDB from "@eduardobuzzi/easyindexeddb";
+import EasyIndexedDB from "./EasyIndexedDB.js";
 
-async function initializeUserDatabase() {
+async function runUserManagementDemo() {
     const db = new EasyIndexedDB();
     
-    // Initialize database
-    await db.initialize("userManagement");
+    try {
+        // Initialize
+        await db.initialize("user-app-db");
+        
+        // Create store if it doesn't exist
+        await db.createObjectStore("users", [
+            { name: "email", unique: true },
+            { name: "username", unique: true },
+            { name: "age", unique: false }
+        ]);
     
-    // Create users store
-    await db.createObjectStore("users", [
-        { name: "email", unique: true },
-        { name: "username", unique: true },
-        { name: "age", unique: false }
-    ]);
-    
-    // Add users
-    await db.insertMultipleDataObjectStore("users", [
-        { email: "john@example.com", username: "john_doe", age: 30 },
-        { email: "jane@example.com", username: "jane_doe", age: 25 }
-    ]);
-    
-    // Query users
-    const allUsers = await db.selectAllDataObjectStore("users");
-    console.log("All users:", allUsers);
-    
-    // Update user
-    await db.updateDataObjectStore(
-        "users",
-        "email",
-        "john@example.com",
-        null,
-        false,
-        [{ index: "age", value: 31 }]
-    );
-    
-    // Get specific user
-    const john = await db.selectDataObjectStore("users", "username", "john_doe");
-    console.log("John\'s updated record:", john);
-    
-    return db;
+        // Add users in a batch
+        await db.insertMultipleDataObjectStore("users", [
+            { email: "alpha@example.com", username: "alpha", age: 35 },
+            { email: "beta@example.com", username: "beta", age: 40 }
+        ]);
+        
+        // Query all users
+        const allUsers = await db.selectAllDataObjectStore("users");
+        console.log("All users:", allUsers);
+        
+        // Update a user's age
+        await db.updateDataObjectStore(
+            "users", "username", "alpha", null, false,
+            [{ index: "age", value: 36 }]
+        );
+        
+        // Get the updated user
+        const alphaUser = await db.selectDataObjectStore("users", "username", "alpha");
+        console.log("Alpha's updated record:", alphaUser);
+
+    } catch (error) {
+        console.error("An error occurred during the demo:", error);
+    }
 }
+
+runUserManagementDemo();
 ```
 
 ## Error Handling
 
-The library uses Promise-based error handling. All methods return promises that reject with descriptive error messages:
+All methods are promise-based and will `reject` on failure. Use `try...catch` blocks with `async/await` for clean error handling.
 
 ```javascript
 try {
     await db.initialize("myDatabase");
-    await db.createObjectStore("users");
+    await db.createObjectStore("products", [{ name: "sku", unique: true }]);
+    await db.insertDataObjectStore("products", { sku: "123", name: "My Product" });
 } catch (error) {
-    console.error("Database operation failed:", error);
+    console.error("Database operation failed:", error.message);
 }
 ```
 
-Common error cases:
-- Browser doesn't support IndexedDB
-- Invalid parameter types
-- Missing required parameters
-- Non-existent database or object store
-- Duplicate unique indexes
-- Invalid timezone
+Common error cases to handle:
+-   **Browser Incompatibility**: The browser does not support IndexedDB.
+-   **Connection Blocked**: Another tab has an open connection to the database that is preventing a version upgrade.
+-   **Constraint Errors**: Trying to insert data that violates a `unique` index constraint.
+-   **Invalid Parameters**: Passing incorrect types or missing required parameters.
+-   **Non-existent Stores/Indexes**: Attempting to operate on a store or index that does not exist.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m "Add some AmazingFeature"`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1.  Fork the repository.
+2.  Create your feature branch (`git checkout -b feature/NewFeature`).
+3.  Commit your changes (`git commit -m "Add some NewFeature"`).
+4.  Push to the branch (`git push origin feature/NewFeature`).
+5.  Open a Pull Request.
 
 ## License
 
